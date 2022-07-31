@@ -85,3 +85,36 @@ Invariants are asserted using the Solidity `assert()` function. A failed assert 
 The `assert` statement is improperly used, for example, to check inputs. A defect in the contract causes it to enter an invalid state.
 Examine if the `assert()` condition properly checks for an invariant. If not, substitute a require() statement for the assert() one.
 Fix the underlying bug(s) that allow the assertion to be broken if the exception is in fact brought on by the code acting in an unanticipated way.
+
+## 11 - Use of Deprecated Solidity Functions
+In Solidity, a number of operations and functions have been deprecated. They result up in bad code quality when used. Deprecated operators and functions may have negative side effects and compilation issues with new major versions of the Solidity compiler.
+
+Solidity provides alternatives to the deprecated constructions.
+| Deprecated              | Alternatives              |
+| :---------------------- | ------------------------: |
+| `suicide(address)`      |	`selfdestruct(address)`   |
+| `block.blockhash(uint)` |	`blockhash(uint)`         |
+| `sha3(...)`	            | `keccak256(...)`          |
+| `callcode(...)`	        | `delegatecall(...)`       |
+| `throw`	                | `revert()`                |
+| `msg.gas`	              | `gasleft`                 |
+| `constant`              | `view`                    |
+| `var`	                  | `corresponding type name` |
+
+## 12 - Delegatecall to Untrusted Callee
+Malicious contracts can be executed in the context of the caller's state by calling `delegatecall()` or `callcode()` to an address within the user's control. For such calls, make sure the destination addresses are reliable.
+
+Be careful while using `delegatecall` and never call into suspicious contracts. Make care to cross-reference the destination address with a whitelist of trustworthy contracts if it was obtained via user input.
+
+## 13 - Transaction Order Dependence AKA Front-Running
+On the Ethereum network, transactions are processed in blocks, with new blocks being confirmed every 17 seconds. The transactions that have paid a high enough gas price to be included are those that the miners choose to include in a block after reviewing the transactions they have received. Additionally, each node receives and processes the transactions that are submitted to the Ethereum network. This means that someone running an Ethereum node may predict which transactions will take place before they are confirmed. When a piece of code depends on how transactions are sent to it, there is a race situation vulnerability.
+
+This technique, for instance, may be used to front-run the traditional ERC20 `approve()` change.
+
+## 14 - Authorization through tx.origin
+The address of the account that sent the transaction is returned by the global variable `tx.origin` in the Solidity .If an authorised account calls into a malicious contract, using the variable for authorization might render a contract susceptible. Since `tx.origin` provides the transaction's original sender, in this instance the approved account, it is possible to call the susceptible contract that successfully passes the authorisation check.
+
+`tx.origin` should not be used for authorization. Use `msg.sender` instead.
+
+## 15 - Block values as a proxy for time
+Developers frequently try to utilise the `block.timestamp` function to start time-related activities. Due to Ethereum's decentralised nature, nodes may only partially synchronise time. Furthermore, malicious miners may alter the timestamp of their blocks if doing so would benefit them. However, miners are not permitted to set a timestamp that is less recent than the preceding one (doing so would result in the block being rejected) nor can they establish a timestamp that is too distant in the future. Developers cannot rely on the accuracy of the given timestamp in light of the foregoing.
