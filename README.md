@@ -118,3 +118,33 @@ The address of the account that sent the transaction is returned by the global v
 
 ## 15 - Block values as a proxy for time
 Developers frequently try to utilise the `block.timestamp` function to start time-related activities. Due to Ethereum's decentralised nature, nodes may only partially synchronise time. Furthermore, malicious miners may alter the timestamp of their blocks if doing so would benefit them. However, miners are not permitted to set a timestamp that is less recent than the preceding one (doing so would result in the block being rejected) nor can they establish a timestamp that is too distant in the future. Developers cannot rely on the accuracy of the given timestamp in light of the foregoing.
+
+## 16 - Signature Malleability
+Although it is frequently assumed that each signature is unique when a cryptographic signature scheme is implemented in Ethereum contracts, signatures can be changed without having access to the private key and still be considered legitimate. One of the so-called "precompiled" contracts defined by the EVM standard is `ecrecover`, which implements elliptic curve public key recovery. The three values v, r, and s can be slightly altered by a malicious user to produce different valid signatures. If the signature is a component of the hash of the signed message, a system that verifies signatures at the contract level may be vulnerable to attacks. A malevolent user might produce legitimate signatures to replay previously signed communications.
+
+## 17 - Shadowing State Variables
+When inheritance is implemented, Solidity permits ambiguous naming of state variables. Contract A, which likewise has a state variable x declared, might inherit contract B, which contains a variable x. As a result, there would be two distinct copies of x, one of which could be accessed through contract A and the other through contract B. This circumstance might go unreported in more intricate contract systems, which could result in security vulnerabilities.
+
+**Code Example:**
+```solidity
+contract A {
+    uint public x = 1;
+}
+
+contract B is A {
+    uint public x = 2;
+}
+
+```
+
+## 18 - Bad Randomness
+In a wide range of applications, having the ability to create random numbers is quite useful. Gambling DApps, which choose the winner using a pseudo-random number generator, are one clear example. It is difficult to build a reliable adequate source of randomness for Ethereum, nevertheless. A miner may choose to submit any timestamp within a few seconds and still have his block accepted by others, making the usage of `block.timestamp`, for instance, unsafe. Since the miner controls `blockhash`, `block.difficulty`, and other variables, their use is equally risky. If the stakes are high, the miner can quickly mine a large number of blocks using rental gear, choose the block with the requisite block hash, and dump all other blocks.
+
+## 19 - Signature Replay Attacks
+To increase usability and reduce gas costs, signature verification may occasionally be required in smart contracts. However, while putting signature verification into practise, care must be taken. The contract should only permit the processing of fresh hashes in order to defend against Signature Replay Attacks. This stops malevolent users from repeatedly repeating the signature of another user.
+
+## 20 - Requirement Violation
+The require() function is used to verify inputs, contract state variables, return values from external contract calls, and other criteria. Inputs can be given by callers or returned by callees to validate external calls. If a callee's return value displays an input violation, one of two things has probably gone wrong:
+1. A bug exists in the contract that provided the external input.
+2. The condition used to express the requirement is too strong.
+
