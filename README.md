@@ -144,7 +144,44 @@ In a wide range of applications, having the ability to create random numbers is 
 To increase usability and reduce gas costs, signature verification may occasionally be required in smart contracts. However, while putting signature verification into practise, care must be taken. The contract should only permit the processing of fresh hashes in order to defend against Signature Replay Attacks. This stops malevolent users from repeatedly repeating the signature of another user.
 
 ## 20 - Requirement Violation
-The require() function is used to verify inputs, contract state variables, return values from external contract calls, and other criteria. Inputs can be given by callers or returned by callees to validate external calls. If a callee's return value displays an input violation, one of two things has probably gone wrong:
+The `require()` function is used to verify inputs, contract state variables, return values from external contract calls, and other criteria. Inputs can be given by callers or returned by callees to validate external calls. If a callee's return value displays an input violation, one of two things has probably gone wrong:
 1. A bug exists in the contract that provided the external input.
 2. The condition used to express the requirement is too strong.
 
+## 21 - Write to Arbitrary Storage Location
+The data of a smart contract is consistently saved at some storage place (i.e., a key or address) on the EVM level, such as the owner of the contract. Only authorised users or contract accounts are permitted to write to sensitive storage locations, and this responsibility rests with the contract. The permission checks may be readily bypassed if an attacker has access to write to any arbitrary storage places in a contract. Through the overwriting of a field that contains the address of the contract owner, for example, an attacker may use this to corrupt the storage.
+
+## 22 - Incorrect Inheritance Order
+Multiple inheritance is supported by Solidity, allowing for the inheritance of multiple contracts by a single contract. Multiple inheritance poses an ambiguity known as the Diamond Problem: which base contract should be called in the child contract if two or more specify the identical function? Reverse C3 Linearization, which establishes a precedence amongst basic contracts, is the method used by Solidity to resolve this problem.
+
+In this approach, the sequence of inheritance matters since base contracts have distinct priorities. Unexpected behaviour might result from disregarding inheritance order.
+
+## 23 - Insufficient Gas Griefing
+Contracts that take data and use it in a sub-call on another contract are susceptible to griefing attacks with insufficient gas. If the sub-call is unsuccessful, either the entire transaction is revoked, or execution is continued. By utilising just enough gas to carry out the transaction but not enough for the sub-call to succeed, the user that conducts the transaction, known as the "forwarder," can effectively filter transactions in the event of a relayer contract.
+There are two options to prevent insufficient gas griefing:
+1. Only allow trusted users to relay transactions.
+2. Require that the forwarder provides enough gas.
+
+## 24 - Unencrypted Private Data On-Chain
+Contrary to popular belief, `private` type variables can be read. Attackers can look at contract transactions or storage locations even if your contract is not public to identify values kept in the state of the contract. It's crucial that no unencrypted private information be kept in the contract code or state for this reason.
+Any private data should either be stored off-chain, or carefully encrypted.
+
+## 25 - Message call with hardcoded gas amount
+Using the `transfer()` and `send()` procedures, 2300 gas are sent in fixed amounts. To protect against reentrancy attacks, it has historically been advised to employ these functions for value transfers. However, during hard forks, the gas cost of EVM instructions may fluctuate dramatically, which might lead to the failure of already-implemented contract systems that rely on constant gas cost assumptions. An illustration. Due to an increase in the cost of the SLOAD instruction, EIP 1884 broke a number of existing smart contracts.
+Avoid the use of transfer() and send() and do not otherwise specify a fixed amount of gas when performing calls. Use .call.value(...)("") instead.
+
+## 26 - Arbitrary Jump with Function Type Variable
+Function types are supported by Solidity. In other words, a reference to a function with a matching signature can be given to a variable of function type. It is possible to call the function stored to such a variable exactly like any other function.
+
+The issue emerges when a user has the power to alter the function type variable at will, causing arbitrary code instructions to be executed. Since Solidity doesn't allow pointer arithmetic, it is impossible to assign an arbitrary value to such a variable. However, in the worst case scenario, an attacker might point a function type variable to any code instruction, breaking necessary validations and necessary state changes, if the developer utilises assembly instructions, such as `mstore` or the assign operator.
+
+## 27 - DoS With Block Gas Limit
+A certain quantity of gas is always required for the execution of smart contract deployments and function calls inside them, depending on the amount of computation involved. The total number of transactions contained in a block cannot go over the block gas limit set by the Ethereum network.
+
+When the cost of running a function exceeds the block gas limit, programming patterns that are safe in centralised apps might cause Denial of Service problems in smart contracts. A Denial of Service situation like this might result from changing an array whose size is unknown and which grows over time.
+
+## 28 - Unexpected Ether balance
+When contracts rigorously presume a particular Ether balance, they may operate incorrectly. It is always possible to use selfdestruct, mining to the account, or forcefully deliver ether to a contract (without using its fallback mechanism). In the worst instance, this can result in DOS circumstances that make the contract useless.
+
+## 29 - Hash Collisions With Multiple Variable Length Arguments
+In some cases, using `abi.encodePacked()` with several parameters of different lengths might result in a hash collision. Because `abi.encodePacked()` packs all items in order whether or not they are part of an array, you may transfer elements across arrays and it will still return the same encoding as long as all of the components are in the same order. An attacker might take advantage of this in a signature verification scenario by changing the order of items in a prior function call to successfully evade permission.
