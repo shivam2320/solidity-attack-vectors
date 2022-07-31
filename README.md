@@ -60,4 +60,28 @@ function checked(address callee) public {
 
 ```
 
-## 6 - 
+## 6 - Unprotected Ether Withdrawal
+Malicious parties may remove all or part of the Ether from the contract account due to missing or inadequate access constraints.
+
+Put safeguards in place so that withdrawals may only be triggered by permitted parties or in accordance with the smart contract system's specifications.
+
+## 7 - Unprotected call to 'selfdestruct'
+Malicious actors may self-destruct contracts that feature a selfdestruct method if there aren't any or enough access controls.
+
+If the self-destruct feature isn't absolutely necessary, consider about removing it. It is advised to construct a multisig scheme if there is a legitimate use-case such that many parties must consent to the self-destruct operation.
+
+## 8 - Default State Variable Visibility
+It is simpler to spot false assumptions about who may access the variable when the visibility is explicitly labelled.
+Variables can be designated as `internal`, `private`, or `public`. All state variables should have visibility defined explicitly.
+
+## 9 - Uninitialized Storage Pointer
+The EVM can store data as `storage`, `memory`, or `calldata`.
+Uninitialized local storage variables may point to unintended contract storage locations, creating security holes. 
+
+This problem has been systematically fixed as of compiler version 0.5.0 and above since contracts with uninitialized storage references no longer compile.
+
+## 10 - Assert Violation
+Invariants are asserted using the Solidity `assert()` function. A failed assert statement should never be encountered in properly working code. A reachable assertion may refer to one of the following:
+The `assert` statement is improperly used, for example, to check inputs. A defect in the contract causes it to enter an invalid state.
+Examine if the `assert()` condition properly checks for an invariant. If not, substitute a require() statement for the assert() one.
+Fix the underlying bug(s) that allow the assertion to be broken if the exception is in fact brought on by the code acting in an unanticipated way.
