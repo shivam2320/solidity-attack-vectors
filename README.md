@@ -12,7 +12,7 @@ Explicit function visibility specifiers are necessary for solc >= 0.5.0.
 ## 2 - Integer Overflow/Underflow
 When an arithmetic operation exceeds or falls short of the type's maximum or minimum size, an overflow or underflow occurs.
 
-For example - `uint8 -> (2^8) - 1` `uint256 -> (2^256) - 1`
+For example - `uint8 -> (2^8)-1` `uint256 -> (2^256)-1`
 
 When you go over the maximum amount (overflow) or below the minimum value (underflow), errors called overflow and underflow might occur. You return to zero when you go beyond the maximum value, and you return to the maximum value when you go below the minimum value.
 
@@ -26,6 +26,15 @@ Check the list of bugs from past versions [here](https://docs.soliditylang.org/e
 **Newer Versions:**
 Using the most recent versions might expose contracts to unforeseen compiler problems.
 Here is a list of recommended versions to use by [silther](https://github.com/crytic/slither/wiki/Detector-Documentation#recommendation-99).
+
+```solidity
+//Floating pragma
+pragma solidity ^0.8.4;
+
+//Fixed pragma
+pragma solidity 0.8.4;
+
+```
 
 ## 4 - Floating Pragma
 A floating pragma makes it possible for contracts to unintentionally be deployed using a faulty or out-of-date compiler version, which might result in defects and compromise the security of your smart contract. 
@@ -50,3 +59,5 @@ function checked(address callee) public {
 }
 
 ```
+
+## 6 - 
